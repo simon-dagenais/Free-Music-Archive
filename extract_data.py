@@ -22,38 +22,38 @@ def process_metadata():
     return tracks
 
 
-def save_mfcc(num_mfcc=13, n_fft=2048, hop_length=512, num_segments=5):
-    """Extracts MFCCs from music dataset and saves them into a json file along witgh genre labels.
-        :param dataset_path (str): Path to dataset
-        :param json_path (str): Path to json file used to save MFCCs
-        :param num_mfcc (int): Number of coefficients to extract
-        :param n_fft (int): Interval we consider to apply FFT. Measured in # of samples
-        :param hop_length (int): Sliding window for FFT. Measured in # of samples
-        :param: num_segments (int): Number of segments we want to divide sample tracks into
-        :return:
-        """
+def save_mfcc(num_mfcc: int = 13, n_fft: int = 2048, hop_length: int = 512, num_segments: int = 5):
+    """
+    Extracts MFCCs from music dataset and saves them into a json file along witgh genre labels.
+    :param num_mfcc: Number of coefficients to extract (int)
+    :param n_fft: Interval we consider to apply FFT. Measured in # of samples
+    :param hop_length: Sliding window for FFT. Measured in # of samples
+    :param num_segments: Number of segments we want to divide sample tracks into
+    :return:
+    """
 
     tracks = process_metadata()
 
     # dictionary to store mapping, labels, and MFCCs
-    data = {
-        "mapping": [],
-        "labels": [],
-        "mfcc": []
-    }
 
     samples_per_segment = int(SAMPLES_PER_TRACK / num_segments)
     num_mfcc_vectors_per_segment = math.ceil(samples_per_segment / hop_length)
 
     for split in tracks["split"].unique():
+        data = {
+            "mapping": [],
+            "labels": [],
+            "mfcc": []
+        }
 
-        df_i = tracks[tracks["split"] == split]
+        df_i = tracks[tracks["split"] == split].reset_index()
 
-        for i, row in df_i.iloc[0: 500, :].iterrows():
+        for i, row in df_i.iloc[0: 100, :].iterrows():
             # semantic_label = row["genre_top"]
             # data["mapping"].append(semantic_label)
 
             try:
+
                 signal, sample_rate = librosa.load(row["path"], sr=SAMPLE_RATE)
 
                 # process all segments of audio file
@@ -71,7 +71,7 @@ def save_mfcc(num_mfcc=13, n_fft=2048, hop_length=512, num_segments=5):
                     if len(mfcc) == num_mfcc_vectors_per_segment:
                         data["mfcc"].append(mfcc.tolist())
                         data["labels"].append(row["genre_label"])
-                        print("{}, segment:{}".format(row["path"], d + 1))
+
             except FileNotFoundError:
                 continue
 
